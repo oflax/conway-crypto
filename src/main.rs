@@ -74,15 +74,13 @@ fn encode(data: String, vec: Vec<Vec<i32>>, gen: i32) {
         while nth > 74 {
             nth -= 75;
         }
-        println!("{}", nth);
         let new_char = CHARS.chars().nth(nth as usize).unwrap().to_string();
         password.push_str(&new_char)
     }
-    print!(
-        "anahtar: {:?}, girilen değer: {:?}, yeni: {:?}, ",
-        key, decimal_data, new_decs
+    println!(
+        "anahtar: {:?}\n\rgirilen değer: {:?}\n\ryeni: {:?}\n\rgirilen metin: {}\n\rşifre: {}",
+        key, decimal_data, new_decs, data, password
     );
-    println!("girilen metin: {}, şifre: {}", data, password)
 }
 
 // ! çalışmıyor
@@ -259,10 +257,10 @@ fn opt1() {
                 code: KeyCode::Char('r'),
                 ..
             }) => {
+                gen = 0;
                 vec.clear();
                 xdata.clear();
-                xdata.push(-1);
-                for _i in 0..y {
+                for _i in 0..y-1 {
                     for _j in 0..x {
                         xdata.push(0);
                     }
