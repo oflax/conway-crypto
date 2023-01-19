@@ -62,16 +62,16 @@ fn encode(data: String, vec: Vec<Vec<i32>>, gen: i32) {
     if key.len() > decimal_data.len() {
         for i in 0..key.len() {
             let j = i % decimal_data.len();
-            new_decs.push(key[i] + decimal_data[j] as i32)
+            new_decs.push(key[i] * (gen + 1) * (j as i32+1) + decimal_data[j] as i32)
         }
     } else {
         for i in 0..decimal_data.len() {
             let j = i % key.len();
-            new_decs.push(key[j] + decimal_data[i] as i32)
+            new_decs.push(key[j] * (gen + 1) * (i as i32+1) + decimal_data[i] as i32)
         }
     }
     for i in new_decs.clone() {
-        let mut nth = i * (gen + 1);
+        let mut nth = i;
         while nth > 74 {
             nth -= 75;
         }
@@ -80,12 +80,12 @@ fn encode(data: String, vec: Vec<Vec<i32>>, gen: i32) {
         password.push_str(&new_char)
     }
     println!(
-        "anahtar: {:?}\n\rgirilen değer: {:?}\n\ryeni: {:?}, {:?}\n\rgirilen metin: {}\n\rşifre: {}",
-        key, decimal_data, new_decs, new_dec, data, password
+        "referans: {:?}\n\rgirilen değer: {:?}\n\ranahtar: {:?}\n\rnesil: {}\n\rgirilen metin: {}\n\rşifre: {}",
+        key, decimal_data, new_decs, gen, data, password
     );
 }
 
-fn decode(key: String, _gen: i32, password: String) {
+fn decode(key: String, gen: i32, password: String) {
     let chars = password.split("").collect::<Vec<&str>>();
     let ks = key.split("-").collect::<Vec<&str>>();
     let chars = &chars[1..chars.len() - 1];
@@ -99,42 +99,20 @@ fn decode(key: String, _gen: i32, password: String) {
     }
     
     let mut keys: Vec<i32> = vec![];
-
+    
     for i in ks {
         let k = i.parse::<i32>().unwrap();
         keys.push(k);
     }
 
-    if decs.len() > keys.len() {
+    if decs.len() >= keys.len() {
         for i in 0..decs.len() {
-            let mut nth = decs[i];
-            let j = i % keys.len();
-            let mth = keys[j] as usize;
-            print!("{} ", nth);
-            while nth < 122 {
-                nth += 75;
-            }
-            print!("{} ", nth);
-            nth -= mth+48;
-            print!("{}\n\r", nth);
+            let nth = 0;
             let ascii = CHARS.chars().nth(nth).unwrap().to_string();
             decoded.push_str(&ascii);
         }
     } else {
-        for i in 0..keys.len() {
-            let mth = keys[i] as usize;
-            let j = i % decs.len();
-            let mut nth = decs[j];
-            print!("{} ", nth);
-            while nth < 122 {
-                nth += 75;
-            }
-            print!("{} ", nth);
-            nth -= mth+48;
-            print!("{}\n\r", nth);
-            let ascii = CHARS.chars().nth(nth).unwrap().to_string();
-            decoded.push_str(&ascii);
-        }
+        println!("a");
     }
 
     println!("şifresiz metin: {}", decoded)
@@ -271,7 +249,7 @@ fn opt1() {
                 gen = 0;
                 vec.clear();
                 xdata.clear();
-                for _i in 0..y-1 {
+                for _i in 0..y - 1 {
                     for _j in 0..x {
                         xdata.push(0);
                     }
