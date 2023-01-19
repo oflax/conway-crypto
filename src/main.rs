@@ -57,16 +57,17 @@ fn encode(data: String, vec: Vec<Vec<i32>>, gen: i32) {
     let decimal_data = hex::decode(hex::encode(data.clone())).unwrap();
     let key = table_to_decimals(vec);
     let mut new_decs: Vec<i32> = vec![];
+    let mut new_dec: Vec<i32> = vec![];
     let mut password: String = "".to_owned();
     if key.len() > decimal_data.len() {
         for i in 0..key.len() {
             let j = i % decimal_data.len();
-            new_decs.push(key[i]*(i as i32+1) + decimal_data[j] as i32)
+            new_decs.push(key[i] + decimal_data[j] as i32)
         }
     } else {
         for i in 0..decimal_data.len() {
             let j = i % key.len();
-            new_decs.push(key[j] + decimal_data[i] as i32 * (i as i32+1))
+            new_decs.push(key[j] + decimal_data[i] as i32)
         }
     }
     for i in new_decs.clone() {
@@ -74,25 +75,23 @@ fn encode(data: String, vec: Vec<Vec<i32>>, gen: i32) {
         while nth > 74 {
             nth -= 75;
         }
+        new_dec.push(nth);
         let new_char = CHARS.chars().nth(nth as usize).unwrap().to_string();
         password.push_str(&new_char)
     }
     println!(
-        "anahtar: {:?}\n\rgirilen değer: {:?}\n\ryeni: {:?}\n\rgirilen metin: {}\n\rşifre: {}",
-        key, decimal_data, new_decs, data, password
+        "anahtar: {:?}\n\rgirilen değer: {:?}\n\ryeni: {:?}, {:?}\n\rgirilen metin: {}\n\rşifre: {}",
+        key, decimal_data, new_decs, new_dec, data, password
     );
 }
 
-// ! çalışmıyor
-fn decode(key: String, gen: i32, password: String) {
+fn decode(key: String, _gen: i32, password: String) {
     let chars = password.split("").collect::<Vec<&str>>();
     let ks = key.split("-").collect::<Vec<&str>>();
     let chars = &chars[1..chars.len() - 1];
 
     let mut decs = vec![];
     let mut decoded = "".to_owned();
-
-    let new_decs: Vec<i32> = vec![];
 
     for i in chars {
         let dec = CHARS.find(i).unwrap();
@@ -106,28 +105,40 @@ fn decode(key: String, gen: i32, password: String) {
         keys.push(k);
     }
 
-    // for i in keys {
-    //     let j = i as usize % key.len();
-    //     let mut nth = i;
-    //     nth += decs[j] as i32;
-    //     println!("{}, {}", nth,decs[j]);
-    //     let ascii = CHARS.chars().nth(nth as usize).unwrap().to_string();
-    //     decoded.push_str(&ascii);
-    // }
-
-    for i in 0..decs.clone().len() {
-        let mut nth = decs[i];
-        if nth < 75 {
-            nth += 75;
+    if decs.len() > keys.len() {
+        for i in 0..decs.len() {
+            let mut nth = decs[i];
+            let j = i % keys.len();
+            let mth = keys[j] as usize;
+            print!("{} ", nth);
+            while nth < 122 {
+                nth += 75;
+            }
+            print!("{} ", nth);
+            nth -= mth+48;
+            print!("{}\n\r", nth);
+            let ascii = CHARS.chars().nth(nth).unwrap().to_string();
+            decoded.push_str(&ascii);
         }
-        println!("{}", keys[i]);
-        nth -= keys[i] as usize + 48;
-        let ascii = CHARS.chars().nth(nth).unwrap().to_string();
-        decoded.push_str(&ascii)
+    } else {
+        for i in 0..keys.len() {
+            let mth = keys[i] as usize;
+            let j = i % decs.len();
+            let mut nth = decs[j];
+            print!("{} ", nth);
+            while nth < 122 {
+                nth += 75;
+            }
+            print!("{} ", nth);
+            nth -= mth+48;
+            print!("{}\n\r", nth);
+            let ascii = CHARS.chars().nth(nth).unwrap().to_string();
+            decoded.push_str(&ascii);
+        }
     }
-    println!("decoded: {}", decoded)
+
+    println!("şifresiz metin: {}", decoded)
 }
-// ! //////////
 
 /*
 let mut gr_size = String::new().to_string();
@@ -297,6 +308,9 @@ fn opt2() {
     println!("anahtar(her iki sayının arasına kısa çizgi (-)): ");
     let mut key = "".to_string();
     io::stdin().read_line(&mut key).ok();
+    println!("nesil: ");
+    let mut gen = "".to_string();
+    io::stdin().read_line(&mut gen).ok();
     println!("şifre: ");
     let mut pass = "".to_string();
     io::stdin().read_line(&mut pass).ok();
