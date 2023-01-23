@@ -57,35 +57,33 @@ fn encode(data: String, vec: Vec<Vec<i32>>, gen: i32) {
     let decimal_data = hex::decode(hex::encode(data.clone())).unwrap();
     let key = table_to_decimals(vec);
     let mut new_decs: Vec<i32> = vec![];
-    let mut new_dec: Vec<i32> = vec![];
     let mut password: String = "".to_owned();
     if key.len() > decimal_data.len() {
-        for i in 0..key.len() {
+        for i in 0..decimal_data.len() {
             let j = i % decimal_data.len();
-            new_decs.push(key[i] * (gen + 1) * (j as i32+1) + decimal_data[j] as i32)
+            // new_decs.push(key[i] + decimal_data[j] as i32)
+            new_decs.push(key[i] * (gen + 1) * (j as i32 + 1) + decimal_data[j] as i32)
         }
     } else {
         for i in 0..decimal_data.len() {
             let j = i % key.len();
-            new_decs.push(key[j] * (gen + 1) * (i as i32+1) + decimal_data[i] as i32)
+            // new_decs.push(key[j] + decimal_data[i] as i32)
+            new_decs.push(key[j] * (gen + 1) * (i as i32 + 1) + decimal_data[i] as i32)
         }
     }
     for i in new_decs.clone() {
         let mut nth = i;
-        while nth > 74 {
-            nth -= 75;
-        }
-        new_dec.push(nth);
+        nth %= 75;
         let new_char = CHARS.chars().nth(nth as usize).unwrap().to_string();
         password.push_str(&new_char)
     }
     println!(
-        "referans: {:?}\n\rgirilen değer: {:?}\n\ranahtar: {:?}\n\rnesil: {}\n\rgirilen metin: {}\n\rşifre: {}",
-        key, decimal_data, new_decs, gen, data, password
+        "anahtar: {:?}\n\rgirilen değer: {:?}\n\rrnesil: {}\n\rgirilen metin: {}\n\rşifre: {}",
+        key, decimal_data, gen, data, password
     );
 }
 
-fn decode(key: String, gen: i32, password: String) {
+fn decode(key: String, gen: usize, password: String) {
     let chars = password.split("").collect::<Vec<&str>>();
     let ks = key.split("-").collect::<Vec<&str>>();
     let chars = &chars[1..chars.len() - 1];
@@ -97,22 +95,45 @@ fn decode(key: String, gen: i32, password: String) {
         let dec = CHARS.find(i).unwrap();
         decs.push(dec);
     }
-    
-    let mut keys: Vec<i32> = vec![];
-    
+
+    let mut keys: Vec<usize> = vec![];
+
     for i in ks {
-        let k = i.parse::<i32>().unwrap();
+        let k = i.parse::<usize>().unwrap();
         keys.push(k);
     }
 
     if decs.len() >= keys.len() {
         for i in 0..decs.len() {
-            let nth = 0;
+            let mut nth = decs[i];
+            let j = i % keys.len();
+            print!("{}, ", nth);
+            while nth < keys[j] * (i + 1) * (gen as usize + 1) + 48 {
+                nth += 75
+            }
+            print!("{}-{}, ", nth, j);
+            nth -= keys[j] * (i + 1) * (gen + 1) + 48;
+            print!("{}\n\r", nth);
             let ascii = CHARS.chars().nth(nth).unwrap().to_string();
             decoded.push_str(&ascii);
         }
     } else {
-        println!("a");
+        for i in 0..keys.len() {
+            let j = i % decs.len();
+            let nth = keys[i];
+            let mut mth = decs[j];
+            print!("{}, ", nth);
+            while mth < nth * (i + 1) * (gen as usize + 1) + 48 {
+                mth += 75
+            }
+            print!("{}, ", mth);
+            mth -= nth * (i + 1) * (gen + 1) + 48;
+            print!("{}-{}\n\r", mth, i);
+            if i != keys.len() - 1 {
+                let ascii = CHARS.chars().nth(mth).unwrap().to_string();
+                decoded.push_str(&ascii);
+            }
+        }
     }
 
     println!("şifresiz metin: {}", decoded)
@@ -293,8 +314,9 @@ fn opt2() {
     let mut pass = "".to_string();
     io::stdin().read_line(&mut pass).ok();
     key.pop();
+    gen.pop();
     pass.pop();
-    decode(key.clone(), 0, pass);
+    decode(key.clone(), gen.parse::<usize>().unwrap(), pass);
 }
 
 fn main() {
